@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Análise quantitativa de decisões do STF</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="José de Jesus Filho" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="robot.css" type="text/css" />
+    <link rel="stylesheet" href="robot-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Análise quantitativa de decisões do STF
+### José de Jesus Filho
+### 2019/04/29 (atualização: 2019-04-29)
+
+---
+
+
+# Onde buscar
+
+
+
+```r
+library(stf)
+library(tidyverse)
+```
+
+&lt;div class="my-header"&gt;
+&lt;span&gt;Jurimetria, 2019-06-08&lt;/span&gt;&lt;/div&gt;
+
+Há basicamente duas fontes, a pesquisa jurisprudencial e o acervo.
+
+[jurisprudencia](http://www.stf.jus.br/portal/jurisprudencia/pesquisarJurisprudencia.asp)
+
+[Acervo](http://www.stf.jus.br/portal/cms/verTexto.asp?servico=estatistica&amp;pagina=decisoesinicio)
+
+A base do acervo é mais segura.
+
+---
+
+# Baixar a relação de casos
+Você pode baixar manualmente ou automatizar.
+
+Para automatizar:
+
+
+```r
+library(stf)
+download_stf_collection(decision_type = "monocraticas",years=2018,dir="data-raw")
+```
+
+---
+
+# Ler o acervo
+
+O comando abaixo lê (importa) o acervo baixado e organiza as informações numa tabela.
+
+
+```r
+monocraticas &lt;- read_stf_collection(classes = "Rcl",years = 2018,dir = "data-raw")
+```
+
+---
+
+# Baixar os processos
+Há duas formas de baixar os processos. Pelo número do incidente ou pelo número do processo.
+A primeira opção é mais rápida, mas nem sempre as planilhas baixadas contêm o número do incidente.
+Para fins de demonstração, iremos baixar apenas dois processos.
+
+
+```r
+download_stf_dockets(class="Rcl",docket_number = monocraticas$numero[1:2],
+                     pastas = c("partes", "andamentos", "informacoes","decisoes"))
+```
+
+---
+
+# Remover colunas desnecessárias
+Para esta análise específica, somente algumas colunas são de interesse. O procedimento abaixo seleciona tais colunas.
+
+
+```r
+monocraticas &lt;- monocraticas %&gt;% 
+  select(incidente,classe,numero,data_autuacao,relator_atual,tipo_decisao,orgao_julgador,data_andamento)
+```
+
+---
+
+# Ler os processos
+
+```r
+detalhes &lt;- read_stf_details(path = "detalhes")
+
+andamentos &lt;- read_stf_docket_sheet(path = "andamentos")
+
+informacoes &lt;- read_stf_information(path = "informacoes")
+
+partes &lt;- read_stf_parties(path = "partes")
+```
+
+---
+
+# Remover casos não analisados
+
+Apenas casos com trânsito em julgado e que não estão em segredo de justiça
+
+
+```r
+transitado &lt;- andamentos %&gt;% 
+  filter(str_detect(titulo,"(?i)transitado")) %&gt;% 
+  pull("incidente") %&gt;% 
+  unique()
+
+publico &lt;- detalhes %&gt;% 
+  filter(!str_detect(sigilo,"Segredo de Justiça")) %&gt;% 
+  pull("incidente") %&gt;% 
+  unique()
+```
+
+---
+
+# Delimitação das partes
+Manteremos somente órgãos jurisdicionados como reclamados
+
+
+```r
+partes &lt;- stf::classify_respondent(partes)
+
+remover_conselhos &lt;- conselhos %&gt;%
+  select(c(1,4,5)) %&gt;%
+  slice(38:57) %&gt;%
+  setNames(c("reclamados","incidente","acao")) %&gt;%
+  filter(acao=="EXCLUIR")
+
+
+remover_conselhos[2,1]&lt;-"CONSELHO DA MAGISTRATURA DO TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO GRANDE DO SUL"
+
+partes &lt;- partes %&gt;%
+  dplyr::filter(!is.element(incidente,remover_conselhos$incidente),!is.element(reclamado,remover_conselhos$reclamados))
+
+partes &lt;- partes %&gt;%
+  filter(instancia!="outros") %&gt;%
+  filter(segmento!="outros")
+```
+
+---
+
+# Exclusão dos casos inválidos
+
+
+
+```r
+andamentos &lt;- andamentos %&gt;% 
+  filter(!invalido)
+```
+
+---
+
+# Baixando os textos das decisões 
+
+```r
+dir.create("textos_rtf")
+dir.create("textos_pdf")
+stf::download_stf_pdf(andamentos,"textos_pdf")
+stf::download_stf_rtf(andamentos,"textos_rtf")
+
+textos_rtf &lt;- stf::read_stf_rtf("textos_rtf")
+textos_pdf &lt;- stf::read_stf_pdf("textos_pdf")
+texto &lt;- bind_rows(textos_rtf,textos_pdf)
+```
+
+# Limpeza dos textos
+
+
+```r
+texto &lt;- texto %&gt;%
+  unite("docname",extensao,docid,sep="") %&gt;%
+  inner_join(andamentos,by="docname")
+
+texto &lt;- texto %&gt;%
+  mutate(caracteres=nchar(texto))
+
+
+texto &lt;- texto %&gt;%
+  mutate(texto=str_remove_all(texto,"(?i)documento assinado\\X+?(sob|por)\\s\\w+"))
+
+
+texto &lt;- texto %&gt;%
+  mutate(texto = str_squish(texto))
+
+
+
+texto &lt;- texto %&gt;%
+  mutate(dispositivo = case_when(
+    caracteres &gt; 800 ~{
+      stringi::stri_reverse(texto) %&gt;%
+        stringi::stri_extract_first_regex("\\X{800}") %&gt;%
+        stringi::stri_reverse()
+    },
+    TRUE ~ texto))
+
+
+
+texto &lt;- texto %&gt;%
+  mutate(dispositivo=case_when(
+    str_detect(texto1,"(?i)(antes? o exposto|ex positis|diante disso|ante o quadro|pelo exposto|diante do exposto|nesse contexto|diante do contexto|por es[st]a razão|pelas razões expostas|por todo o exposto|dessa forma|decis.o:|com essas considerações|nessas condições|sendo assim|face ao exposto|do exposto)") ~{
+      str_extract(dispositivo,"(?i)(antes? o exposto|ex positis|diante disso|ante o quadro|pelo exposto|diante do exposto|nesse contexto|diante do contexto|por es[ts]a razão|pelas razões expostas|por todo o exposto|dessa forma|decis.o:|com essas considerações|nessas condições|sendo assim|face ao exposto|do exposto).+")
+    },
+    TRUE ~ dispositivo))
+
+
+texto &lt;- texto %&gt;%
+  filter(!str_detect(dispositivo,"(?i)defiro a liminar"))
+
+texto &lt;- texto %&gt;%
+  mutate(exclusoes = str_extract(texto,"\\X{80}")) %&gt;%
+  # filter(!str_detect(cautelar,"MEDIDA CAUTELAR")) %&gt;%
+  filter(!str_detect(exclusoes,"(?i)(^Documento|^MINISTÉRIO|^procurador)")) %&gt;%
+  filter(!str_detect(exclusoes,"EMB.DECL.")) %&gt;%
+  filter(!str_detect(doc,"(?i)(PGR|despacho|certid.o|vista)")|is.na(doc)) %&gt;%
+  select(-exclusoes)
+```
+
+--- 
+
+
+
+```r
+texto &lt;- texto  %&gt;%
+  dplyr::mutate(decisao = stringi::stri_trans_tolower(dispositivo),
+                decisao = abjutils::rm_accent(decisao),
+                decisao = case_when(
+                  str_detect(decisao,"(nego|negado|negou)\\sseguimento") ~ "nego seguimento",
+                  str_detect(decisao,"(desprov\\w+|improv\\w+|improced\\w+)") ~ "improvido",
+                  str_detect(decisao,"(nao|nega\\w+)\\s+provi.*")~ "improvido",
+                  str_detect(decisao,"(rejeit\\w+|inadmitidos?)") ~ "improvido",
+                  str_detect(decisao,"mantiveram") ~ "improvido",
+                  str_detect(decisao,"(acolho|acolhido)") ~ "provido",
+                  str_detect(decisao,"(deram|da\\-*\\s*se|dando\\-*(se)*|comporta|dou|confere\\-se|se\\s*\\-*da|merece)\\sprovi\\w+") ~ "provido",
+                  str_detect(decisao,"parcial\\w*\\sprovimento") ~ "provido",
+                  str_detect(decisao,"(nao\\sderam|nao\\smerece|se\\snega|nega\\-*\\s*se|negar\\-*\\s*lhe|nao\\scomporta|negram|negararam|nego|negar|negou)") ~ "improvido",
+                  str_detect(decisao,"\\bprovimento") ~ "provido",
+                  str_detect(decisao,"\\bprocedente") ~ "provido",
+                  str_detect(decisao,"(nao\\sconhec\\w+|nao\\sse\\sconhec\\w+)") ~ "não conhecido",
+                  str_detect(decisao,"desconh\\w+") ~ "desconhecido",
+                  str_detect(decisao,"nao\\s+conhec\\w+") ~ "desconhecido",
+                  str_detect(decisao,"(homolog|desistencia)") ~ "desistência",
+                  str_detect(decisao,"diligencia") ~ "conversão em diligência",
+                  str_detect(decisao,"sobrest") ~ "sobrestado",
+                  str_detect(decisao,"prejudicad\\w*") ~ "prejudicado",
+                  str_detect(decisao,"(anular\\w*|nulo|nula|nulidade)") ~ "anulado",
+                  TRUE ~ "outros"))
+
+texto &lt;- texto %&gt;%
+  mutate(decisao = case_when(
+    decisao == "provido" ~ "procedente",
+    decisao == "improvido" ~ "improcedente",
+    TRUE ~ decisao
+  ))
+
+improcedente &lt;- texto %&gt;%
+  filter(decisao == "improcedente")
+
+procedente &lt;- texto %&gt;%
+  filter(decisao == "procedente")
+
+seguimento &lt;- texto %&gt;%
+  filter(decisao=="nego seguimento")
+
+
+prejudicado&lt;-texto %&gt;%
+  filter(decisao=="prejudicado/extinto")
+
+sobrestado &lt;- texto %&gt;%
+  filter(decisao=="sobrestado")
+
+
+outros &lt;- texto %&gt;%
+  filter(decisao=="outros")
+
+
+sucedaneo &lt;- seguimento %&gt;%
+  select(texto,docname) %&gt;%
+  quanteda::corpus("docname","texto") %&gt;%
+  quanteda::kwic("(?i)(suced[aâ]neo|\\bpresta\\b|atalho)",window = 20,valuetype = "regex") %&gt;%
+  as_tibble()
+
+sucedaneo&lt;-sucedaneo %&gt;%
+  filter(keyword!="presta-se") %&gt;%
+  pull("docname") %&gt;%
+  unique()
+
+seguimento &lt;- seguimento %&gt;%
+  filter(!docname %in% sucedaneo)
+
+
+sumula_734 &lt;- seguimento %&gt;%
+  filter(str_detect(texto,"\\b734\\b")) %&gt;%
+  pull("docname") %&gt;%
+  unique()
+
+seguimento &lt;- seguimento %&gt;%
+  filter(!docname %in% sumula_734)
+
+aderencia &lt;- seguimento %&gt;%
+  select(texto,docname) %&gt;%
+  quanteda::corpus("docname","texto") %&gt;%
+  quanteda::kwic("(?i)ader.ncia",window = 20,valuetype = "regex") %&gt;%
+  as_tibble()
+```
+
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightLanguage": "R",
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

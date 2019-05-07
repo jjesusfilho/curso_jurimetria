@@ -1,0 +1,311 @@
+---
+title: "Análise quantitativa de decisões do STF"
+subtitle: ""
+author: "José de Jesus Filho"
+date: "2019/04/29 (atualização: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+layout: true
+---
+
+# Onde buscar
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = '#> ')
+```
+
+```{r eval=FALSE}
+library(stf)
+library(tidyverse)
+```
+
+<div class="my-header">
+<span>Jurimetria, 2019-06-08</span></div>
+
+Há basicamente duas fontes, a pesquisa jurisprudencial e o acervo.
+
+[jurisprudencia](http://www.stf.jus.br/portal/jurisprudencia/pesquisarJurisprudencia.asp)
+
+[Acervo](http://www.stf.jus.br/portal/cms/verTexto.asp?servico=estatistica&pagina=decisoesinicio)
+
+A base do acervo é mais segura.
+
+---
+
+# Baixar a relação de casos
+Você pode baixar manualmente ou automatizar.
+
+Para automatizar:
+
+```{r,eval=FALSE, echo=TRUE}
+library(stf)
+download_stf_collection(decision_type = "monocraticas",years=2018,dir="data-raw")
+```
+
+---
+
+# Ler o acervo
+
+O comando abaixo lê (importa) o acervo baixado e organiza as informações numa tabela.
+
+```{r eval=FALSE}
+monocraticas <- read_stf_collection(classes = "Rcl",years = 2018,dir = "data-raw")
+
+```
+
+---
+
+# Baixar os processos
+Há duas formas de baixar os processos. Pelo número do incidente ou pelo número do processo.
+A primeira opção é mais rápida, mas nem sempre as planilhas baixadas contêm o número do incidente.
+Para fins de demonstração, iremos baixar apenas dois processos.
+
+```{r eval=FALSE}
+download_stf_dockets(class="Rcl",docket_number = monocraticas$numero[1:2],
+                     pastas = c("partes", "andamentos", "informacoes","decisoes"))
+```
+
+---
+
+# Remover colunas desnecessárias
+Para esta análise específica, somente algumas colunas são de interesse. O procedimento abaixo seleciona tais colunas.
+
+```{r eval=FALSE}
+monocraticas <- monocraticas %>% 
+  select(incidente,classe,numero,data_autuacao,relator_atual,tipo_decisao,orgao_julgador,data_andamento)
+```
+
+---
+
+# Ler os processos
+```{r eval=FALSE}
+detalhes <- read_stf_details(path = "detalhes")
+
+andamentos <- read_stf_docket_sheet(path = "andamentos")
+
+informacoes <- read_stf_information(path = "informacoes")
+
+partes <- read_stf_parties(path = "partes")
+```
+
+---
+
+# Remover casos não analisados
+
+Apenas casos com trânsito em julgado e que não estão em segredo de justiça
+
+```{r eval=FALSE}
+transitado <- andamentos %>% 
+  filter(str_detect(titulo,"(?i)transitado")) %>% 
+  pull("incidente") %>% 
+  unique()
+
+publico <- detalhes %>% 
+  filter(!str_detect(sigilo,"Segredo de Justiça")) %>% 
+  pull("incidente") %>% 
+  unique()
+
+
+```
+
+---
+
+# Delimitação das partes
+Manteremos somente órgãos jurisdicionados como reclamados
+
+```{r eval=FALSE}
+
+partes <- stf::classify_respondent(partes)
+
+remover_conselhos <- conselhos %>%
+  select(c(1,4,5)) %>%
+  slice(38:57) %>%
+  setNames(c("reclamados","incidente","acao")) %>%
+  filter(acao=="EXCLUIR")
+
+
+remover_conselhos[2,1]<-"CONSELHO DA MAGISTRATURA DO TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO GRANDE DO SUL"
+
+partes <- partes %>%
+  dplyr::filter(!is.element(incidente,remover_conselhos$incidente),!is.element(reclamado,remover_conselhos$reclamados))
+
+partes <- partes %>%
+  filter(instancia!="outros") %>%
+  filter(segmento!="outros")
+
+```
+
+---
+
+# Exclusão dos casos inválidos
+
+
+```{r eval=FALSE}
+andamentos <- andamentos %>% 
+  filter(!invalido)
+```
+
+---
+
+# Baixando os textos das decisões 
+```{r eval=FALSE}
+dir.create("textos_rtf")
+dir.create("textos_pdf")
+stf::download_stf_pdf(andamentos,"textos_pdf")
+stf::download_stf_rtf(andamentos,"textos_rtf")
+
+textos_rtf <- stf::read_stf_rtf("textos_rtf")
+textos_pdf <- stf::read_stf_pdf("textos_pdf")
+texto <- bind_rows(textos_rtf,textos_pdf)
+
+```
+
+# Limpeza dos textos
+
+```{r eval=FALSE}
+texto <- texto %>%
+  unite("docname",extensao,docid,sep="") %>%
+  inner_join(andamentos,by="docname")
+
+texto <- texto %>%
+  mutate(caracteres=nchar(texto))
+
+
+texto <- texto %>%
+  mutate(texto=str_remove_all(texto,"(?i)documento assinado\\X+?(sob|por)\\s\\w+"))
+
+
+texto <- texto %>%
+  mutate(texto = str_squish(texto))
+
+
+
+texto <- texto %>%
+  mutate(dispositivo = case_when(
+    caracteres > 800 ~{
+      stringi::stri_reverse(texto) %>%
+        stringi::stri_extract_first_regex("\\X{800}") %>%
+        stringi::stri_reverse()
+    },
+    TRUE ~ texto))
+
+
+
+texto <- texto %>%
+  mutate(dispositivo=case_when(
+    str_detect(texto1,"(?i)(antes? o exposto|ex positis|diante disso|ante o quadro|pelo exposto|diante do exposto|nesse contexto|diante do contexto|por es[st]a razão|pelas razões expostas|por todo o exposto|dessa forma|decis.o:|com essas considerações|nessas condições|sendo assim|face ao exposto|do exposto)") ~{
+      str_extract(dispositivo,"(?i)(antes? o exposto|ex positis|diante disso|ante o quadro|pelo exposto|diante do exposto|nesse contexto|diante do contexto|por es[ts]a razão|pelas razões expostas|por todo o exposto|dessa forma|decis.o:|com essas considerações|nessas condições|sendo assim|face ao exposto|do exposto).+")
+    },
+    TRUE ~ dispositivo))
+
+
+texto <- texto %>%
+  filter(!str_detect(dispositivo,"(?i)defiro a liminar"))
+
+texto <- texto %>%
+  mutate(exclusoes = str_extract(texto,"\\X{80}")) %>%
+  # filter(!str_detect(cautelar,"MEDIDA CAUTELAR")) %>%
+  filter(!str_detect(exclusoes,"(?i)(^Documento|^MINISTÉRIO|^procurador)")) %>%
+  filter(!str_detect(exclusoes,"EMB.DECL.")) %>%
+  filter(!str_detect(doc,"(?i)(PGR|despacho|certid.o|vista)")|is.na(doc)) %>%
+  select(-exclusoes)
+
+```
+
+--- 
+
+
+```{r eval=FALSE}
+texto <- texto  %>%
+  dplyr::mutate(decisao = stringi::stri_trans_tolower(dispositivo),
+                decisao = abjutils::rm_accent(decisao),
+                decisao = case_when(
+                  str_detect(decisao,"(nego|negado|negou)\\sseguimento") ~ "nego seguimento",
+                  str_detect(decisao,"(desprov\\w+|improv\\w+|improced\\w+)") ~ "improvido",
+                  str_detect(decisao,"(nao|nega\\w+)\\s+provi.*")~ "improvido",
+                  str_detect(decisao,"(rejeit\\w+|inadmitidos?)") ~ "improvido",
+                  str_detect(decisao,"mantiveram") ~ "improvido",
+                  str_detect(decisao,"(acolho|acolhido)") ~ "provido",
+                  str_detect(decisao,"(deram|da\\-*\\s*se|dando\\-*(se)*|comporta|dou|confere\\-se|se\\s*\\-*da|merece)\\sprovi\\w+") ~ "provido",
+                  str_detect(decisao,"parcial\\w*\\sprovimento") ~ "provido",
+                  str_detect(decisao,"(nao\\sderam|nao\\smerece|se\\snega|nega\\-*\\s*se|negar\\-*\\s*lhe|nao\\scomporta|negram|negararam|nego|negar|negou)") ~ "improvido",
+                  str_detect(decisao,"\\bprovimento") ~ "provido",
+                  str_detect(decisao,"\\bprocedente") ~ "provido",
+                  str_detect(decisao,"(nao\\sconhec\\w+|nao\\sse\\sconhec\\w+)") ~ "não conhecido",
+                  str_detect(decisao,"desconh\\w+") ~ "desconhecido",
+                  str_detect(decisao,"nao\\s+conhec\\w+") ~ "desconhecido",
+                  str_detect(decisao,"(homolog|desistencia)") ~ "desistência",
+                  str_detect(decisao,"diligencia") ~ "conversão em diligência",
+                  str_detect(decisao,"sobrest") ~ "sobrestado",
+                  str_detect(decisao,"prejudicad\\w*") ~ "prejudicado",
+                  str_detect(decisao,"(anular\\w*|nulo|nula|nulidade)") ~ "anulado",
+                  TRUE ~ "outros"))
+
+texto <- texto %>%
+  mutate(decisao = case_when(
+    decisao == "provido" ~ "procedente",
+    decisao == "improvido" ~ "improcedente",
+    TRUE ~ decisao
+  ))
+
+improcedente <- texto %>%
+  filter(decisao == "improcedente")
+
+procedente <- texto %>%
+  filter(decisao == "procedente")
+
+seguimento <- texto %>%
+  filter(decisao=="nego seguimento")
+
+
+prejudicado<-texto %>%
+  filter(decisao=="prejudicado/extinto")
+
+sobrestado <- texto %>%
+  filter(decisao=="sobrestado")
+
+
+outros <- texto %>%
+  filter(decisao=="outros")
+
+
+sucedaneo <- seguimento %>%
+  select(texto,docname) %>%
+  quanteda::corpus("docname","texto") %>%
+  quanteda::kwic("(?i)(suced[aâ]neo|\\bpresta\\b|atalho)",window = 20,valuetype = "regex") %>%
+  as_tibble()
+
+sucedaneo<-sucedaneo %>%
+  filter(keyword!="presta-se") %>%
+  pull("docname") %>%
+  unique()
+
+seguimento <- seguimento %>%
+  filter(!docname %in% sucedaneo)
+
+
+sumula_734 <- seguimento %>%
+  filter(str_detect(texto,"\\b734\\b")) %>%
+  pull("docname") %>%
+  unique()
+
+seguimento <- seguimento %>%
+  filter(!docname %in% sumula_734)
+
+aderencia <- seguimento %>%
+  select(texto,docname) %>%
+  quanteda::corpus("docname","texto") %>%
+  quanteda::kwic("(?i)ader.ncia",window = 20,valuetype = "regex") %>%
+  as_tibble()
+
+
+```
+
+---
+
+
+
