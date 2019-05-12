@@ -5,11 +5,11 @@
 
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Introdução à jurimetria com o R</title>
+  <title>1.1 Problemas do mundo real | Introdução à jurimetria com o R</title>
   <meta name="description" content="Introdução à jurimetria para acadêmicos e profissionais do direito">
   <meta name="generator" content="bookdown  and GitBook 2.6.7">
 
-  <meta property="og:title" content="Introdução à jurimetria com o R" />
+  <meta property="og:title" content="1.1 Problemas do mundo real | Introdução à jurimetria com o R" />
   <meta property="og:type" content="book" />
   <meta property="og:url" content="https://jjesusfilho.github.io/jurimetria/" />
   
@@ -17,7 +17,7 @@
   <meta name="github-repo" content="jjesusfilho/jurimetria" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Introdução à jurimetria com o R" />
+  <meta name="twitter:title" content="1.1 Problemas do mundo real | Introdução à jurimetria com o R" />
   
   <meta name="twitter:description" content="Introdução à jurimetria para acadêmicos e profissionais do direito" />
   
@@ -31,8 +31,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
-
-<link rel="next" href="introducao.html">
+<link rel="prev" href="1-pq.html">
+<link rel="next" href="1-2-duas-incertezas.html">
 <script src="libs/jquery/jquery.min.js"></script>
 <link href="libs/gitbook/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
@@ -230,41 +230,26 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <div class = rmdreview>
 Este livro está em  <b>Revisão aberta</b>. Suas impressões são importantes para torná-lo melhor para você e para outros estudantes. Você pode anotar alguns textos  <span style="background-color: #3297FD; color: white">selecionando-os com o cursor</span> e clicando <i class="h-icon-annotate"></i> no menu popup. Você também pode ler anotações de outras pessoas: Clique <i class="h-icon-chevron-left"></i> no canto superior direito da página <i class="fa fa-arrow-circle-right  fa-rotate-315" aria-hidden="true"></i>
 </div>
-<div id="header">
-<h1 class="title">Introdução à jurimetria com o R</h1>
-<p class="author"><em>José de Jesus Filho</em></p>
-<p class="date"><em>Última atualização: 12/mai/2019</em></p>
+<div id="problemas-do-mundo-real" class="section level2">
+<h2><span class="header-section-number">1.1</span> Problemas do mundo real</h2>
+<p>Suponha que você foi contratado por um familiar de alguém que foi preso há dois dias em flagrante delito sob suspeita de ter praticado tráfico de drogas. Os autos de inquérito policial foram distribuídos para a vara <em>n</em> O flagrante foi convertido em prisão preventiva,<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. Você toma conhecimento de que na vara em que tramita o processo foram julgados 754 pedidos de liberdade provisória em casos similares ao seu no último ano.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> Desses, 420 foram julgados favoravelmente ao pedido de liberdade provisória. Você faz as contas e verifica que 0,56, ou 56%, dos pedidos foram concedidos, isto é, a maioria. Suponho que você deve ter se perguntado: Aquela vara realmente tende a conceder mais pedidos de liberdade provisória do que negar? Esta proporção é suficiente para você dizer aos familiares que está confiante de que o juiz irá conceder a liberdade provisória?</p>
+<p>Suponha agora que você expandiu o período e elevou o número de casos para 2500, fez os cálculos e chegou a uma proporção não muito distante da primeira, agora 0,57. Os valores são similares, mas intuitivamente a informação é melhor, pois baseada em um maior número de casos. O quão distante o risco relativo de 0,57, que chamaremos de parâmetro de interesse <span class="math inline">\(\theta\)</span>, para concessão está de 1? A resposta a esta questão requer a formulação de um modelo estocátisco que descreva os dados observados. A análise estatística lhe ajuda a passar dos dados observados para realizar declarações acerca do parâmetro de interesse <span class="math inline">\(\theta\)</span>.</p>
+<p>Como você deve ter observado, a incerteza permeia o mundo dos fatos e das relações. Se estou prestando concurso público para ser promotor, defensor, juiz ou oficial de justiça, diante da minha nota, quais as minhas chances de ser aprovado e ser convocado? A jurimetria é o único ramo do direito que se dedica a medir a incerteza diante da limitação de informação disponível. Seu objetivo não é eliminar a incerteza, mas quantificá-la. Com efeito, a incerteza permanecerá mesmo depois de conduzida a análise.</p>
 </div>
-<div id="prefacio" class="section level1 unnumbered">
-<h1>Prefácio</h1>
-<p>A principal motivação em escrever este livro tem sido incentivar estudantes de direito a realizar pesquisas empíricas quantitativas. A psicologia desenvolveu a psicometria e a economia desenvolveu a econometria, cada uma com objeto e métodos próprios. Cabe ao jurista assumir a tarefa de desenvolver métodos quantitativos próprios para análise da prática do direito, seja nas cortes, nos escritórios de advocacia, nos departamentos jurídicos das empresas ou ongs e mesmo do direito achado na rua.</p>
-<p>Minha expectativa é a de que, não somente as faculdades de direito criem as respectivas cadeiras de jurimetria, mas também as escolas da magistratura, do Ministério Público, da Defensoria Pública e das procuradorias dos estados, incorporem a jurimetria como parte da formação de seus profissionais.</p>
-<p>Até pouco mais de dez anos, a jurimetria, enquanto campo específico de estudo, era praticamente desconhecida. Foi o trabalho pioneiro do professor Marcelo Guedes Nunes, ao defender em 2012 sua tese de doutorado sobre o tema e criar a Associação Brasileira de Jurimetria, que esta disciplina ganhou fôlego a passou a ser disseminada.</p>
-<div id="convencoes-neste-livro" class="section level4 unnumbered">
-<h4>Convenções neste livro</h4>
-<ul>
-<li><p><em>Itálico</em> novos termos, nomes, botões e similares.</p></li>
-<li><p><tt>Texto com largura constante</tt> geralmente usado em parágrafos para indicar o código <tt>R</tt>. Isso inclui comandos, variáveis, funções, tipos de dados, bases e nomes de arquivos.</p></li>
-<li><p><code>Texto com largura constante em fundo cinza</code> indica <tt>R</tt> código que foi digitado literalmente por você. Pode parecer em parágrafos para melhor distinção entre códigos executáveis e e não executáveis, mas será encontrado principalmente em forma de blocos largos de códig <tt>R</tt>. Esses blocos são referidos como trechos de códigos (code chunks).</p></li>
-</ul>
-</div>
-<div id="agradecimentos" class="section level4 unnumbered">
-<h4>Agradecimentos</h4>
-<p>Devo muito à minha esposa Melissa, não somente pelo constante incentivo, mas também pelos frequentes conselhos sobre como conduzir o meu trabalho.</p>
-<p>Aos colegas da Associação Brasileira de Jurimetria (ABJ), especialmente ao Julio Trecenti, por haver me introduzido à jurimetria e, com isso, resgatar a minha paixão adolescente por exatas a fim de aplicá-la ao direito.</p>
-<p>Os professores Marcos e Lorena Barbiera me iniciaram no mundo dos métodos quantitativos. A eles um especial agradecimento. O ambiente colaborativo da comunidade do <tt>R</tt> foi terra fecunda onde plantei as sementes que hoje geram este e tantos outros frutos open source.</p>
-<p><br>
-<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License" /></p>
-<p>This book is licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</p>
-</div>
+<div class="footnotes">
+<hr />
+<ol start="1">
+<li id="fn1"><p>Tecnicamente não há conversão de flagrante em prisão, mas sim uma apreciação pelo juiz sobre a presença dos requisitos da prisão preventiva<a href="1-1-problemas-do-mundo-real.html#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Quando falamos de similares, estamos considerando que foram controlados os demais fatores: reincidência, quantidade de droga, tipo de droga, promotor etc<a href="1-1-problemas-do-mundo-real.html#fnref2" class="footnote-back">↩</a></p></li>
+</ol>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-
-<a href="introducao.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="1-pq.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="1-2-duas-incertezas.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook/js/app.min.js"></script>

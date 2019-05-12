@@ -5,11 +5,11 @@
 
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Introdução à jurimetria com o R</title>
+  <title>Capítulo 5 Análise exploratória de dados | Introdução à jurimetria com o R</title>
   <meta name="description" content="Introdução à jurimetria para acadêmicos e profissionais do direito">
   <meta name="generator" content="bookdown  and GitBook 2.6.7">
 
-  <meta property="og:title" content="Introdução à jurimetria com o R" />
+  <meta property="og:title" content="Capítulo 5 Análise exploratória de dados | Introdução à jurimetria com o R" />
   <meta property="og:type" content="book" />
   <meta property="og:url" content="https://jjesusfilho.github.io/jurimetria/" />
   
@@ -17,7 +17,7 @@
   <meta name="github-repo" content="jjesusfilho/jurimetria" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Introdução à jurimetria com o R" />
+  <meta name="twitter:title" content="Capítulo 5 Análise exploratória de dados | Introdução à jurimetria com o R" />
   
   <meta name="twitter:description" content="Introdução à jurimetria para acadêmicos e profissionais do direito" />
   
@@ -31,8 +31,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
-
-<link rel="next" href="introducao.html">
+<link rel="prev" href="4-5-classificacao-dos-textos-conforme-procedencia-ou-improcedencia.html">
+<link rel="next" href="5-1-estatisticas-das-variaveis.html">
 <script src="libs/jquery/jquery.min.js"></script>
 <link href="libs/gitbook/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
@@ -230,32 +230,30 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <div class = rmdreview>
 Este livro está em  <b>Revisão aberta</b>. Suas impressões são importantes para torná-lo melhor para você e para outros estudantes. Você pode anotar alguns textos  <span style="background-color: #3297FD; color: white">selecionando-os com o cursor</span> e clicando <i class="h-icon-annotate"></i> no menu popup. Você também pode ler anotações de outras pessoas: Clique <i class="h-icon-chevron-left"></i> no canto superior direito da página <i class="fa fa-arrow-circle-right  fa-rotate-315" aria-hidden="true"></i>
 </div>
-<div id="header">
-<h1 class="title">Introdução à jurimetria com o R</h1>
-<p class="author"><em>José de Jesus Filho</em></p>
-<p class="date"><em>Última atualização: 12/mai/2019</em></p>
+<div id="analise-exploratoria-de-dados" class="section level1">
+<h1><span class="header-section-number">Capítulo 5</span> Análise exploratória de dados</h1>
+<p>Realizado o trabalho de coleta, limpeza e organização dos dados, a etapa seguinte é conduzir a análise exploratória de dados (EDA na sigla em inglês). A análise exploratória de dados visa dar a conhecer a estrutura subjacente dos dados e expor um conjunto de informações acerca dos dados a fim de que a pesquisadora passa tomar passos adiante ou atrás no processo de análise. Igualmente, ela fornece um sumário descritivo. Segundo <span class="citation">(Pearson <a href="#ref-pearson2018exploratory">2018</a>)</span>, a análise exploratória dos dados coletados sobre as reclamações ao STF busca responder as seguintes questões:</p>
+<ol style="list-style-type: decimal">
+<li>Quantos registros a base de dados sobre reclamações contêm? (Isto é, quantas decisões do STF sobre reclamações estão sendo analisadas)</li>
+<li>Quantas colunas, i.e, variáveis, estão incluídas em cada um dos registros?</li>
+<li>Que tipo de variáveis são essas? (i.e. numéricas, categóricas, contínuas, discretas?)</li>
+<li>Esses dados foram todos observados? (i.e. há dados faltantes, há outliers?)</li>
+<li>As variáveis incluídas na base são aquelas que nós realmente estávamos esperando?</li>
+<li>Os valores contidos nas variáveis são consistentes?, i.e. número de categorias, categorias corretas etc, ?</li>
+<li>As associações entre as variáveis são aquelas que esperávamos?
+7.1 Por exemplo, podemos esperar que o CPC 2015 elevou o número de procedência dos pedidos?
+7.2 Podemos esperar diferenças entre os ministros quanto ao número de casos procedentes ou não?</li>
+</ol>
+<p>É importante destacar que a análise exploratória é útil para verificar a associação entre as variáveis, particularmente entre as variáveis preditoras e a variável resposta. Inclusive iremos realizar alguns testes de associação, e.g, chi-quadrado, de força dessas associações (WOE) e mesmo capacidade preditiva das variáveis explicativas. No entanto, é fundamental tomar em conta que os testes de associação e de significância, tal como o teste do chi-quadrado e o t-test, não informam nada sobre o efeito marginal de cada uma das variáveis explicativas sobre a variável resposta. Em pesquisas experimentais, isso é perfeitamente possível porque o pesquisador possui controle preciso sobre os fatores que causam ou modificam o resultado obtido. Por sua vez, as pesquisas em ciências sociais se caracterizam por serem observacionais e a pesquisadora não possui controle apriorístico sobre o efeito de uma variável sobre a outra. Ela precisa precisa considerar outros fatores que afetam o resultado para assim isolar o efeito de cada uma das variáveis explicativas sobre o resultado<span class="citation">(Silva <a href="#ref-silva2018desenho">2018</a>)</span>.</p>
+<p>Na pesquisa em tela, estamos diante de dados observacionais. O esforço é dirigido em identificar todos os possíveis fatores que influenciam a resposta judicial ao pedido. Nesse sentido, os testes de associação bivariados são inadequados porque irão superdimensionar o efeito de uma variável sobre a outra. A tarefa, a qual será executada na próxima seção, será de isolar o efeito de cada uma das variáveis explicativas sobre a variável resposta: decisão judicial. Com efeito, podemos supor que o ministro A julgará diferentemente o pedido de reclamação quando se tratar de uma alegada violação a uma súmula do STF do que quando se tratar de uma violaçã a uma decisão inter partes ou que uma reclamação contra decisão da justiça do trabalho tem maior probabilidade de ter uma resposta favorável quando o ministro é fulano do que quando este é beltrano. Esse tipo de controle somente é posssível realizar por meio das técnicas de regressão, pois o objetivo destas é justamente isolar o efeito de cada uma das variáveis sobre os resultado.</p> 
 </div>
-<div id="prefacio" class="section level1 unnumbered">
-<h1>Prefácio</h1>
-<p>A principal motivação em escrever este livro tem sido incentivar estudantes de direito a realizar pesquisas empíricas quantitativas. A psicologia desenvolveu a psicometria e a economia desenvolveu a econometria, cada uma com objeto e métodos próprios. Cabe ao jurista assumir a tarefa de desenvolver métodos quantitativos próprios para análise da prática do direito, seja nas cortes, nos escritórios de advocacia, nos departamentos jurídicos das empresas ou ongs e mesmo do direito achado na rua.</p>
-<p>Minha expectativa é a de que, não somente as faculdades de direito criem as respectivas cadeiras de jurimetria, mas também as escolas da magistratura, do Ministério Público, da Defensoria Pública e das procuradorias dos estados, incorporem a jurimetria como parte da formação de seus profissionais.</p>
-<p>Até pouco mais de dez anos, a jurimetria, enquanto campo específico de estudo, era praticamente desconhecida. Foi o trabalho pioneiro do professor Marcelo Guedes Nunes, ao defender em 2012 sua tese de doutorado sobre o tema e criar a Associação Brasileira de Jurimetria, que esta disciplina ganhou fôlego a passou a ser disseminada.</p>
-<div id="convencoes-neste-livro" class="section level4 unnumbered">
-<h4>Convenções neste livro</h4>
-<ul>
-<li><p><em>Itálico</em> novos termos, nomes, botões e similares.</p></li>
-<li><p><tt>Texto com largura constante</tt> geralmente usado em parágrafos para indicar o código <tt>R</tt>. Isso inclui comandos, variáveis, funções, tipos de dados, bases e nomes de arquivos.</p></li>
-<li><p><code>Texto com largura constante em fundo cinza</code> indica <tt>R</tt> código que foi digitado literalmente por você. Pode parecer em parágrafos para melhor distinção entre códigos executáveis e e não executáveis, mas será encontrado principalmente em forma de blocos largos de códig <tt>R</tt>. Esses blocos são referidos como trechos de códigos (code chunks).</p></li>
-</ul>
+<h3>References</h3>
+<div id="refs" class="references">
+<div id="ref-pearson2018exploratory">
+<p>Pearson, Ronald K. 2018. <em>Exploratory Data Analysis Using R</em>. CRC Press.</p>
 </div>
-<div id="agradecimentos" class="section level4 unnumbered">
-<h4>Agradecimentos</h4>
-<p>Devo muito à minha esposa Melissa, não somente pelo constante incentivo, mas também pelos frequentes conselhos sobre como conduzir o meu trabalho.</p>
-<p>Aos colegas da Associação Brasileira de Jurimetria (ABJ), especialmente ao Julio Trecenti, por haver me introduzido à jurimetria e, com isso, resgatar a minha paixão adolescente por exatas a fim de aplicá-la ao direito.</p>
-<p>Os professores Marcos e Lorena Barbiera me iniciaram no mundo dos métodos quantitativos. A eles um especial agradecimento. O ambiente colaborativo da comunidade do <tt>R</tt> foi terra fecunda onde plantei as sementes que hoje geram este e tantos outros frutos open source.</p>
-<p><br>
-<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License" /></p>
-<p>This book is licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</p>
+<div id="ref-silva2018desenho">
+<p>Silva, Glauco Peres da. 2018. “Desenho de Pesquisa.” Escola Nacional de Administração Pública (Enap).</p>
 </div>
 </div>
             </section>
@@ -263,8 +261,8 @@ Este livro está em  <b>Revisão aberta</b>. Suas impressões são importantes p
           </div>
         </div>
       </div>
-
-<a href="introducao.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="4-5-classificacao-dos-textos-conforme-procedencia-ou-improcedencia.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="5-1-estatisticas-das-variaveis.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook/js/app.min.js"></script>

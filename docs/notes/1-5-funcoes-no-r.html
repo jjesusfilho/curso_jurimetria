@@ -5,11 +5,11 @@
 
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Introdução à jurimetria com o R</title>
+  <title>1.5 Funções no R | Introdução à jurimetria com o R</title>
   <meta name="description" content="Introdução à jurimetria para acadêmicos e profissionais do direito">
   <meta name="generator" content="bookdown  and GitBook 2.6.7">
 
-  <meta property="og:title" content="Introdução à jurimetria com o R" />
+  <meta property="og:title" content="1.5 Funções no R | Introdução à jurimetria com o R" />
   <meta property="og:type" content="book" />
   <meta property="og:url" content="https://jjesusfilho.github.io/jurimetria/" />
   
@@ -17,7 +17,7 @@
   <meta name="github-repo" content="jjesusfilho/jurimetria" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Introdução à jurimetria com o R" />
+  <meta name="twitter:title" content="1.5 Funções no R | Introdução à jurimetria com o R" />
   
   <meta name="twitter:description" content="Introdução à jurimetria para acadêmicos e profissionais do direito" />
   
@@ -31,8 +31,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
-
-<link rel="next" href="introducao.html">
+<link rel="prev" href="introducao-ao-r.html">
+<link rel="next" href="1-6-argumentos.html">
 <script src="libs/jquery/jquery.min.js"></script>
 <link href="libs/gitbook/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
@@ -230,41 +230,25 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <div class = rmdreview>
 Este livro está em  <b>Revisão aberta</b>. Suas impressões são importantes para torná-lo melhor para você e para outros estudantes. Você pode anotar alguns textos  <span style="background-color: #3297FD; color: white">selecionando-os com o cursor</span> e clicando <i class="h-icon-annotate"></i> no menu popup. Você também pode ler anotações de outras pessoas: Clique <i class="h-icon-chevron-left"></i> no canto superior direito da página <i class="fa fa-arrow-circle-right  fa-rotate-315" aria-hidden="true"></i>
 </div>
-<div id="header">
-<h1 class="title">Introdução à jurimetria com o R</h1>
-<p class="author"><em>José de Jesus Filho</em></p>
-<p class="date"><em>Última atualização: 12/mai/2019</em></p>
-</div>
-<div id="prefacio" class="section level1 unnumbered">
-<h1>Prefácio</h1>
-<p>A principal motivação em escrever este livro tem sido incentivar estudantes de direito a realizar pesquisas empíricas quantitativas. A psicologia desenvolveu a psicometria e a economia desenvolveu a econometria, cada uma com objeto e métodos próprios. Cabe ao jurista assumir a tarefa de desenvolver métodos quantitativos próprios para análise da prática do direito, seja nas cortes, nos escritórios de advocacia, nos departamentos jurídicos das empresas ou ongs e mesmo do direito achado na rua.</p>
-<p>Minha expectativa é a de que, não somente as faculdades de direito criem as respectivas cadeiras de jurimetria, mas também as escolas da magistratura, do Ministério Público, da Defensoria Pública e das procuradorias dos estados, incorporem a jurimetria como parte da formação de seus profissionais.</p>
-<p>Até pouco mais de dez anos, a jurimetria, enquanto campo específico de estudo, era praticamente desconhecida. Foi o trabalho pioneiro do professor Marcelo Guedes Nunes, ao defender em 2012 sua tese de doutorado sobre o tema e criar a Associação Brasileira de Jurimetria, que esta disciplina ganhou fôlego a passou a ser disseminada.</p>
-<div id="convencoes-neste-livro" class="section level4 unnumbered">
-<h4>Convenções neste livro</h4>
-<ul>
-<li><p><em>Itálico</em> novos termos, nomes, botões e similares.</p></li>
-<li><p><tt>Texto com largura constante</tt> geralmente usado em parágrafos para indicar o código <tt>R</tt>. Isso inclui comandos, variáveis, funções, tipos de dados, bases e nomes de arquivos.</p></li>
-<li><p><code>Texto com largura constante em fundo cinza</code> indica <tt>R</tt> código que foi digitado literalmente por você. Pode parecer em parágrafos para melhor distinção entre códigos executáveis e e não executáveis, mas será encontrado principalmente em forma de blocos largos de códig <tt>R</tt>. Esses blocos são referidos como trechos de códigos (code chunks).</p></li>
-</ul>
-</div>
-<div id="agradecimentos" class="section level4 unnumbered">
-<h4>Agradecimentos</h4>
-<p>Devo muito à minha esposa Melissa, não somente pelo constante incentivo, mas também pelos frequentes conselhos sobre como conduzir o meu trabalho.</p>
-<p>Aos colegas da Associação Brasileira de Jurimetria (ABJ), especialmente ao Julio Trecenti, por haver me introduzido à jurimetria e, com isso, resgatar a minha paixão adolescente por exatas a fim de aplicá-la ao direito.</p>
-<p>Os professores Marcos e Lorena Barbiera me iniciaram no mundo dos métodos quantitativos. A eles um especial agradecimento. O ambiente colaborativo da comunidade do <tt>R</tt> foi terra fecunda onde plantei as sementes que hoje geram este e tantos outros frutos open source.</p>
-<p><br>
-<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License" /></p>
-<p>This book is licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</p>
-</div>
+<div id="funcoes-no-r" class="section level2">
+<h2><span class="header-section-number">1.5</span> Funções no R</h2>
+<p>O R opera por meio da chamada de funções. Por exemplo, para calcular a raiz quadrada de um número, você usa a função <code>sqrd</code>:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sqrd</span>(<span class="dv">4</span>)</code></pre>
+<p>Está função irá produzir o número dois no console do R. É assim que opera a maioria das funções no R. Se você associar o resultado a um nome, em vez de mostrar o resultado no console, esta função irá alojar o resultado no nome que você der. Para ver o resultado, você deve imprimi-lo no console, usando a função <code>print</code> ou simplesmente digitando o objeto:</p>
+<pre class="sourceCode r"><code class="sourceCode r">a &lt;-<span class="st"> </span><span class="kw">sqrd</span>(<span class="dv">9</span>)
+<span class="kw">print</span>(a) </code></pre>
+<p>Se você chamar a função sem os parênteses, o R irá mostrar o código utilizado quando você chama a função:</p>
+<pre class="sourceCode r"><code class="sourceCode r">factorial</code></pre>
+<p>Então, para chamar uma função, você sempre deve utilizar parênteses. Dentro deles, você deve colocar os argumentos da função. Veremos isso em pormenor no próximo tópico. Se você quer saber para que serve e como opera uma função, você deve colocar o símbolo de interrogação antes da função, sem necessidade de incluir os parênteses:</p>
+<pre class="sourceCode r"><code class="sourceCode r">?sqrt</code></pre>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-
-<a href="introducao.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="introducao-ao-r.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="1-6-argumentos.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook/js/app.min.js"></script>

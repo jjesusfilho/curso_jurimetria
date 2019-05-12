@@ -5,11 +5,11 @@
 
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Introdução à jurimetria com o R</title>
+  <title>4.5 Classificação dos textos conforme procedência ou improcedência | Introdução à jurimetria com o R</title>
   <meta name="description" content="Introdução à jurimetria para acadêmicos e profissionais do direito">
   <meta name="generator" content="bookdown  and GitBook 2.6.7">
 
-  <meta property="og:title" content="Introdução à jurimetria com o R" />
+  <meta property="og:title" content="4.5 Classificação dos textos conforme procedência ou improcedência | Introdução à jurimetria com o R" />
   <meta property="og:type" content="book" />
   <meta property="og:url" content="https://jjesusfilho.github.io/jurimetria/" />
   
@@ -17,7 +17,7 @@
   <meta name="github-repo" content="jjesusfilho/jurimetria" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Introdução à jurimetria com o R" />
+  <meta name="twitter:title" content="4.5 Classificação dos textos conforme procedência ou improcedência | Introdução à jurimetria com o R" />
   
   <meta name="twitter:description" content="Introdução à jurimetria para acadêmicos e profissionais do direito" />
   
@@ -31,8 +31,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
-
-<link rel="next" href="introducao.html">
+<link rel="prev" href="4-4-limpeza-dos-textos.html">
+<link rel="next" href="5-analise-exploratoria-de-dados.html">
 <script src="libs/jquery/jquery.min.js"></script>
 <link href="libs/gitbook/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
@@ -230,41 +230,105 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <div class = rmdreview>
 Este livro está em  <b>Revisão aberta</b>. Suas impressões são importantes para torná-lo melhor para você e para outros estudantes. Você pode anotar alguns textos  <span style="background-color: #3297FD; color: white">selecionando-os com o cursor</span> e clicando <i class="h-icon-annotate"></i> no menu popup. Você também pode ler anotações de outras pessoas: Clique <i class="h-icon-chevron-left"></i> no canto superior direito da página <i class="fa fa-arrow-circle-right  fa-rotate-315" aria-hidden="true"></i>
 </div>
-<div id="header">
-<h1 class="title">Introdução à jurimetria com o R</h1>
-<p class="author"><em>José de Jesus Filho</em></p>
-<p class="date"><em>Última atualização: 12/mai/2019</em></p>
+<div id="classificacao-dos-textos-conforme-procedencia-ou-improcedencia" class="section level2">
+<h2><span class="header-section-number">4.5</span> Classificação dos textos conforme procedência ou improcedência</h2>
+<p>O procedimento abaixo classifica os textos das decisões conforme procedência ou improcedência. O trabalho aqui foi recortar as decisões que eram de mérito. Para tanto, aplicamos a técnica de expressões regulares (regex) para identificar padrões nos textos dos dispositivos.</p>
+<p>Todo esse trabalho de identificação é heurístico e requer a conjunção de esforços de automação e validação pelo pesquisador. Uma técnica de processamento de linguagem natural muito útil é conhecida como “kwic” (key word in context). Por ela, buscamos uma palavra-chave, e.g., “procedente” em seu contexto, isto é, verificamos todas as vezes que esta palavra aparece no dispositivo e quais as palavras que a antecedem ou que a sucedem. Este procedimento permite observar padrões tais como “não procedente” ou “julgo procedente”. A experiência com classificações em outras pesquisas tem nos permitido reduzir significativamente as chances de erro.</p>
+<p>Mesmo quando ocorrem alguns erros, esses são mínimos e podem ser verificados por outros meios, tais como a verificação da consistência da base. Por exemplo, um texto erroneamente classificado como decisão de agravo deve ser contrastado com o tipo de decisão. Se esta foi uma decisão monocrática, claramente não se trata de um agravo.</p>
+<p>Por fim, uma particularidade do STF é o uso da expressão “nego seguimento” ora par indicar “improcedência”, ora para indicar uma decisão terminativa sem julgamento do mérito. Esse aspecto representou uma dificuldade a mais, pois foi necessário encontrar outras palavras que indicassem quando a expressão estava sendo usada para julgamento de mérito, e.g. “aderência” ou quando definitivamente não era de mérito, e.g, “súmula 734” ou “sucedâneo” e “atalho”.</p>
+<p>Diante da dúvida se a decisão era de mérito ou não, preferiu-se excluí-la. Ao final, depois de todas as exclusões e aplicações de filtros, chegou-se a 5636 casos. Uma amostra foi retirada para realização de validação humana. Não foi identificado nenhum erro. Isso não signfica que a base está isenta de erros de classificação, mas a pesquisadora está segura de que se estes ocorreram, eles foram mínimos e não afetarão significativamente os resultados.</p>
+<p>Ainda assim, a próxima etapa da análise, denominada “Exploratory Data Analysis” permite verificar inconsistências ou disparidades nas distribuições e anomalias nos dados. Novas correções são possíveis nesse momento.</p>
+<pre class="sourceCode r"><code class="sourceCode r">texto &lt;-<span class="st"> </span>texto  <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">decisao =</span> stringi<span class="op">::</span><span class="kw">stri_trans_tolower</span>(dispositivo),
+                <span class="dt">decisao =</span> abjutils<span class="op">::</span><span class="kw">rm_accent</span>(decisao),
+                <span class="dt">decisao =</span> <span class="kw">case_when</span>(
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(nego|negado|negou)</span><span class="ch">\\</span><span class="st">sseguimento&quot;</span>) <span class="op">~</span><span class="st"> &quot;nego seguimento&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(desprov</span><span class="ch">\\</span><span class="st">w+|improv</span><span class="ch">\\</span><span class="st">w+|improced</span><span class="ch">\\</span><span class="st">w+)&quot;</span>) <span class="op">~</span><span class="st"> &quot;improvido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(nao|nega</span><span class="ch">\\</span><span class="st">w+)</span><span class="ch">\\</span><span class="st">s+provi.*&quot;</span>)<span class="op">~</span><span class="st"> &quot;improvido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(rejeit</span><span class="ch">\\</span><span class="st">w+|inadmitidos?)&quot;</span>) <span class="op">~</span><span class="st"> &quot;improvido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;mantiveram&quot;</span>) <span class="op">~</span><span class="st"> &quot;improvido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(acolho|acolhido)&quot;</span>) <span class="op">~</span><span class="st"> &quot;provido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(deram|da</span><span class="ch">\\</span><span class="st">-*</span><span class="ch">\\</span><span class="st">s*se|dando</span><span class="ch">\\</span><span class="st">-*(se)*|comporta|dou|confere</span><span class="ch">\\</span><span class="st">-se|se</span><span class="ch">\\</span><span class="st">s*</span><span class="ch">\\</span><span class="st">-*da|merece)</span><span class="ch">\\</span><span class="st">sprovi</span><span class="ch">\\</span><span class="st">w+&quot;</span>) <span class="op">~</span><span class="st"> &quot;provido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;parcial</span><span class="ch">\\</span><span class="st">w*</span><span class="ch">\\</span><span class="st">sprovimento&quot;</span>) <span class="op">~</span><span class="st"> &quot;provido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(nao</span><span class="ch">\\</span><span class="st">sderam|nao</span><span class="ch">\\</span><span class="st">smerece|se</span><span class="ch">\\</span><span class="st">snega|nega</span><span class="ch">\\</span><span class="st">-*</span><span class="ch">\\</span><span class="st">s*se|negar</span><span class="ch">\\</span><span class="st">-*</span><span class="ch">\\</span><span class="st">s*lhe|nao</span><span class="ch">\\</span><span class="st">scomporta|negram|negararam|nego|negar|negou)&quot;</span>) <span class="op">~</span><span class="st"> &quot;improvido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bprovimento&quot;</span>) <span class="op">~</span><span class="st"> &quot;provido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bprocedente&quot;</span>) <span class="op">~</span><span class="st"> &quot;provido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(nao</span><span class="ch">\\</span><span class="st">sconhec</span><span class="ch">\\</span><span class="st">w+|nao</span><span class="ch">\\</span><span class="st">sse</span><span class="ch">\\</span><span class="st">sconhec</span><span class="ch">\\</span><span class="st">w+)&quot;</span>) <span class="op">~</span><span class="st"> &quot;não conhecido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;desconh</span><span class="ch">\\</span><span class="st">w+&quot;</span>) <span class="op">~</span><span class="st"> &quot;desconhecido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;nao</span><span class="ch">\\</span><span class="st">s+conhec</span><span class="ch">\\</span><span class="st">w+&quot;</span>) <span class="op">~</span><span class="st"> &quot;desconhecido&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(homolog|desistencia)&quot;</span>) <span class="op">~</span><span class="st"> &quot;desistência&quot;,</span>
+<span class="st">                  str_detect(decisao,&quot;</span>diligencia<span class="st">&quot;) ~ &quot;</span>conversão em diligência&quot;,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;sobrest&quot;</span>) <span class="op">~</span><span class="st"> &quot;sobrestado&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;prejudicad</span><span class="ch">\\</span><span class="st">w*&quot;</span>) <span class="op">~</span><span class="st"> &quot;prejudicado&quot;</span>,
+                  <span class="kw">str_detect</span>(decisao,<span class="st">&quot;(anular</span><span class="ch">\\</span><span class="st">w*|nulo|nula|nulidade)&quot;</span>) <span class="op">~</span><span class="st"> &quot;anulado&quot;</span>,
+                  <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> &quot;outros&quot;</span>))
+
+texto &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">decisao =</span> <span class="kw">case_when</span>(
+    decisao <span class="op">==</span><span class="st"> &quot;provido&quot;</span> <span class="op">~</span><span class="st"> &quot;procedente&quot;</span>,
+    decisao <span class="op">==</span><span class="st"> &quot;improvido&quot;</span> <span class="op">~</span><span class="st"> &quot;improcedente&quot;</span>,
+    <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span>decisao
+  ))
+
+improcedente &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao <span class="op">==</span><span class="st"> &quot;improcedente&quot;</span>)
+
+procedente &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao <span class="op">==</span><span class="st"> &quot;procedente&quot;</span>)
+
+seguimento &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao<span class="op">==</span><span class="st">&quot;nego seguimento&quot;</span>)
+
+
+prejudicado&lt;-texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao<span class="op">==</span><span class="st">&quot;prejudicado/extinto&quot;</span>)
+
+sobrestado &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao<span class="op">==</span><span class="st">&quot;sobrestado&quot;</span>)
+
+
+outros &lt;-<span class="st"> </span>texto <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(decisao<span class="op">==</span><span class="st">&quot;outros&quot;</span>)
+
+
+sucedaneo &lt;-<span class="st"> </span>seguimento <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(texto,docname) <span class="op">%&gt;%</span>
+<span class="st">  </span>quanteda<span class="op">::</span><span class="kw">corpus</span>(<span class="st">&quot;docname&quot;</span>,<span class="st">&quot;texto&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>quanteda<span class="op">::</span><span class="kw">kwic</span>(<span class="st">&quot;(?i)(suced[aâ]neo|</span><span class="ch">\\</span><span class="st">bpresta</span><span class="ch">\\</span><span class="st">b|atalho)&quot;</span>,<span class="dt">window =</span> <span class="dv">20</span>,<span class="dt">valuetype =</span> <span class="st">&quot;regex&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">as_tibble</span>()
+
+sucedaneo&lt;-sucedaneo <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(keyword<span class="op">!=</span><span class="st">&quot;presta-se&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">pull</span>(<span class="st">&quot;docname&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">unique</span>()
+
+seguimento &lt;-<span class="st"> </span>seguimento <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>docname <span class="op">%in%</span><span class="st"> </span>sucedaneo)
+
+
+sumula_<span class="dv">734</span> &lt;-<span class="st"> </span>seguimento <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="kw">str_detect</span>(texto,<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b734</span><span class="ch">\\</span><span class="st">b&quot;</span>)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">pull</span>(<span class="st">&quot;docname&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">unique</span>()
+
+seguimento &lt;-<span class="st"> </span>seguimento <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>docname <span class="op">%in%</span><span class="st"> </span>sumula_<span class="dv">734</span>)
+
+aderencia &lt;-<span class="st"> </span>seguimento <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(texto,docname) <span class="op">%&gt;%</span>
+<span class="st">  </span>quanteda<span class="op">::</span><span class="kw">corpus</span>(<span class="st">&quot;docname&quot;</span>,<span class="st">&quot;texto&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>quanteda<span class="op">::</span><span class="kw">kwic</span>(<span class="st">&quot;(?i)ader.ncia&quot;</span>,<span class="dt">window =</span> <span class="dv">20</span>,<span class="dt">valuetype =</span> <span class="st">&quot;regex&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">as_tibble</span>()</code></pre>
+
 </div>
-<div id="prefacio" class="section level1 unnumbered">
-<h1>Prefácio</h1>
-<p>A principal motivação em escrever este livro tem sido incentivar estudantes de direito a realizar pesquisas empíricas quantitativas. A psicologia desenvolveu a psicometria e a economia desenvolveu a econometria, cada uma com objeto e métodos próprios. Cabe ao jurista assumir a tarefa de desenvolver métodos quantitativos próprios para análise da prática do direito, seja nas cortes, nos escritórios de advocacia, nos departamentos jurídicos das empresas ou ongs e mesmo do direito achado na rua.</p>
-<p>Minha expectativa é a de que, não somente as faculdades de direito criem as respectivas cadeiras de jurimetria, mas também as escolas da magistratura, do Ministério Público, da Defensoria Pública e das procuradorias dos estados, incorporem a jurimetria como parte da formação de seus profissionais.</p>
-<p>Até pouco mais de dez anos, a jurimetria, enquanto campo específico de estudo, era praticamente desconhecida. Foi o trabalho pioneiro do professor Marcelo Guedes Nunes, ao defender em 2012 sua tese de doutorado sobre o tema e criar a Associação Brasileira de Jurimetria, que esta disciplina ganhou fôlego a passou a ser disseminada.</p>
-<div id="convencoes-neste-livro" class="section level4 unnumbered">
-<h4>Convenções neste livro</h4>
-<ul>
-<li><p><em>Itálico</em> novos termos, nomes, botões e similares.</p></li>
-<li><p><tt>Texto com largura constante</tt> geralmente usado em parágrafos para indicar o código <tt>R</tt>. Isso inclui comandos, variáveis, funções, tipos de dados, bases e nomes de arquivos.</p></li>
-<li><p><code>Texto com largura constante em fundo cinza</code> indica <tt>R</tt> código que foi digitado literalmente por você. Pode parecer em parágrafos para melhor distinção entre códigos executáveis e e não executáveis, mas será encontrado principalmente em forma de blocos largos de códig <tt>R</tt>. Esses blocos são referidos como trechos de códigos (code chunks).</p></li>
-</ul>
-</div>
-<div id="agradecimentos" class="section level4 unnumbered">
-<h4>Agradecimentos</h4>
-<p>Devo muito à minha esposa Melissa, não somente pelo constante incentivo, mas também pelos frequentes conselhos sobre como conduzir o meu trabalho.</p>
-<p>Aos colegas da Associação Brasileira de Jurimetria (ABJ), especialmente ao Julio Trecenti, por haver me introduzido à jurimetria e, com isso, resgatar a minha paixão adolescente por exatas a fim de aplicá-la ao direito.</p>
-<p>Os professores Marcos e Lorena Barbiera me iniciaram no mundo dos métodos quantitativos. A eles um especial agradecimento. O ambiente colaborativo da comunidade do <tt>R</tt> foi terra fecunda onde plantei as sementes que hoje geram este e tantos outros frutos open source.</p>
-<p><br>
-<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License" /></p>
-<p>This book is licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</p>
-</div>
-</div>
+<!-- </div> -->
             </section>
 
           </div>
         </div>
       </div>
-
-<a href="introducao.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="4-4-limpeza-dos-textos.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="5-analise-exploratoria-de-dados.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook/js/app.min.js"></script>
