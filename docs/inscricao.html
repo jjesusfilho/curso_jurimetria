@@ -400,7 +400,32 @@
                 <li>Investimento Transmissão Simultânea: 400</li>
 
             </ul>
-            <script type="text/javascript" src="https://form.jotformz.com/jsform/92398548414670"></script>
+           
+
+            <div id="caixa">
+                    <h3><b>Escolha como deseja efetuar o pagamento:</b></h3>
+            <select id="dynamic_select">
+                    <option value="" selected>Selecione a opção de pagamento</option>
+                    <option value="https://pag.ae/7VdmHJ69v">Transmissão simultânea R$ 400.00</option>
+                    <option value="https://pag.ae/7VdmJSb2N">Presencial R$ 500.00 </option>
+                  </select>
+                </div>
+
+                  
+                  <script>
+                      $(function(){
+                        // bind change event to select
+                        $('#dynamic_select').on('change', function () {
+                            var url = $(this).val(); // get selected value
+                            if (url) { // require a URL
+                                window.location = url; // redirect
+                            }
+                            return false;
+                        });
+                      });
+                  </script>
+    
+
         </div>
 
 
@@ -427,6 +452,7 @@
             document.getElementsByTagName("head")[0].appendChild(script);
         })();
     </script>
+    
 
 </body>
 
