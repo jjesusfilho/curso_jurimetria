@@ -3,6 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -294,7 +296,8 @@
 
     <!-- code folding -->
 
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
 
 </head>
@@ -386,8 +389,6 @@
 
         </div>
 
-      
-
         <div id="informacoes-do-curso" class="section level3">
 
             <h3>Informações do curso:</h3>
@@ -397,62 +398,26 @@
                 <li>Horário: 9h00 às 13h00.</li>
                 <li>Duração: 24 horas</li>
                 <li>Investimento Presencial: R$ 500,00</li>
-                <li>Investimento Transmissão Simultânea: 400</li>
+                <li>Investimento Transmissão Simultânea: R$ 400,00</li>
 
             </ul>
            
 
-            <div id="caixa">
-                    <h3><b>Escolha como deseja efetuar o pagamento:</b></h3>
-            <select id="dynamic_select">
-                    <option value="" selected>Selecione a opção de pagamento</option>
-                    <option value="https://pag.ae/7VdmHJ69v">Transmissão simultânea R$ 400.00</option>
-                    <option value="https://pag.ae/7VdmJSb2N">Presencial R$ 500.00 </option>
-                  </select>
+            <div>
+                    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+                        <input type="hidden" name="cmd" value="_s-xclick">
+                        <input type="hidden" name="hosted_button_id" value="AYZXHGD6J3WN8">
+                        <input type="image" src="https://www.paypalobjects.com/pt_BR/BR/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - A maneira fácil e segura de enviar pagamentos online!">
+                        <img alt="" border="0" src="https://www.paypalobjects.com/pt_BR/i/scr/pixel.gif" width="1" height="1">
+                        </form>
+                        
                 </div>
 
                   
-                  <script>
-                      $(function(){
-                        // bind change event to select
-                        $('#dynamic_select').on('change', function () {
-                            var url = $(this).val(); // get selected value
-                            if (url) { // require a URL
-                                window.location = url; // redirect
-                            }
-                            return false;
-                        });
-                      });
-                  </script>
-    
-
-        </div>
-
-
-
-
-    </div>
-
-    <script>
-        // add bootstrap table styles to pandoc tables
-        function bootstrapStylePandocTables() {
-            $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
-        }
-        $(document).ready(function() {
-            bootstrapStylePandocTables();
-        });
-    </script>
-
-    <!-- dynamically load mathjax for compatibility with self-contained -->
-    <script>
-        (function() {
-            var script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-            document.getElementsByTagName("head")[0].appendChild(script);
-        })();
-    </script>
-    
+            
+ 
+            
+     
 
 </body>
 
